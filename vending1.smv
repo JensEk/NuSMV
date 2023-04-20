@@ -24,8 +24,41 @@ DEFINE
 LTLSPEC
   G(acc_payment -> F release_item);
 
+
 /--
- # Specifies that for all executions of the system if a payment is accepted then eventually an item must be released.
+***OLD MACHINE***
+MODULE main
+VAR
+  choice:  boolean;
+  payment: boolean;
+  acc_payment: boolean;
+  state:   { ready, expect_payment, dispense_item };
+
+ASSIGN
+  init (state) := ready;
+  next (state) := case
+		    state = ready          & choice:  expect_payment;
+		    state = expect_payment & acc_payment: dispense_item;
+		    state = expect_payment & !choice: ready;
+		    state = dispense_item:	      ready;
+		    TRUE:                             state;
+  esac;
+
+  init (acc_payment) := FALSE;
+  next (acc_payment) := (state = expect_payment & payment);
+
+DEFINE
+  release_item := (state = dispense_item);
+
+LTLSPEC
+  G(acc_payment -> F release_item);
+--/
+
+
+
+/--
+
+# Specifies that for all executions of the system if a payment is accepted then eventually an item must be released.
 -- specification  G (acc_payment ->  F release_item)  is false
 
 
@@ -33,28 +66,33 @@ LTLSPEC
 Trace Description: LTL Counterexample
 Trace Type: Counterexample
 
-  -> State: 1.1 <-	# Initial state of the system all variables are 'FALSE' and state is 'ready'
+# Initial state of the system where all variables are set to 'FALSE' and state is set to 'ready'
+  -> State: 1.1 <-
     choice = FALSE
     payment = FALSE
     acc_payment = FALSE
     state = ready
     release_item = FALSE
 
-  -> State: 1.2 <-	# User makes a choice which causes next state to be 'expect_payment' 
+# User makes a choice which sets it to 'TRUE' and causes next state to be 'expect_payment' because the first case statement is true
+  -> State: 1.2 <- 
     choice = TRUE
 
-  -> State: 1.3 <-	# User makes a payment and falsify choice which sets next state to 'ready'
+# User makes a payment and falsify its choice which sets next state to 'ready'
+  -> State: 1.3 <-
     choice = FALSE
     payment = TRUE
     state = expect_payment
 
-  -> State: 1.4 <-	# As in state 'ready' there is no match even if acc_payment=TRUE so sets next state to same state 'ready'
+# As the system is in state 'ready' and there is no match even if 'acc_payment = TRUE' the next state becomes the same state as '
+  -> State: 1.4 <-	# As in state 'ready' there is no match even if acc_payment=TRUE so sets next state to the default which is same as current 'ready'
     payment = FALSE
     acc_payment = TRUE
     state = ready
 
+# Payment is not accepted causing the next state to be 'ready'
   -- Loop starts here
-  -> State: 1.5 <-	# Payment is not accepted so next state is set to 'ready'
+  -> State: 1.5 <-
     acc_payment = FALSE
 
   -> State: 1.6 <-
