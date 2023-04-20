@@ -10,7 +10,7 @@ ASSIGN
   next (state) := case
 		    state = ready          & choice:  expect_payment;
 		    state = expect_payment & acc_payment: dispense_item;
-		    state = expect_payment & !choice: ready;
+		    state = expect_payment & choice: state; -- Changed from go to ready to stay in same state
 		    state = dispense_item:	      ready;
 		    TRUE:                             state;
   esac;
