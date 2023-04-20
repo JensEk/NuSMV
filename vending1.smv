@@ -1,0 +1,61 @@
+MODULE main
+VAR
+  choice:  boolean;
+  payment: boolean;
+  acc_payment: boolean;
+  state:   { ready, expect_payment, dispense_item };
+
+ASSIGN
+  init (state) := ready;
+  next (state) := case
+		    state = ready          & choice:  expect_payment;
+		    state = expect_payment & acc_payment: dispense_item;
+		    state = expect_payment & !choice: ready;
+		    state = dispense_item:	      ready;
+		    TRUE:                             state;
+  esac;
+
+  init (acc_payment) := FALSE;
+  next (acc_payment) := (state = expect_payment & payment);
+
+DEFINE
+  release_item := (state = dispense_item);
+
+LTLSPEC
+  G(acc_payment -> F release_item);
+
+/--
+ # Specifies that for all executions of the system if a payment is accepted then eventually an item must be released.
+-- specification  G (acc_payment ->  F release_item)  is false
+
+
+-- as demonstrated by the following execution sequence
+Trace Description: LTL Counterexample
+Trace Type: Counterexample
+
+  -> State: 1.1 <-	# Initial state of the system all variables are 'FALSE' and state is 'ready'
+    choice = FALSE
+    payment = FALSE
+    acc_payment = FALSE
+    state = ready
+    release_item = FALSE
+
+  -> State: 1.2 <-	# User makes a choice which causes next state to be 'expect_payment' 
+    choice = TRUE
+
+  -> State: 1.3 <-	# User makes a payment and falsify choice which sets next state to 'ready'
+    choice = FALSE
+    payment = TRUE
+    state = expect_payment
+
+  -> State: 1.4 <-	# As in state 'ready' there is no match even if acc_payment=TRUE so sets next state to same state 'ready'
+    payment = FALSE
+    acc_payment = TRUE
+    state = ready
+
+  -- Loop starts here
+  -> State: 1.5 <-	# Payment is not accepted so next state is set to 'ready'
+    acc_payment = FALSE
+
+  -> State: 1.6 <-
+--/
