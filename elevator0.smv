@@ -136,11 +136,12 @@ MODULE CTRL(floor, door, pressed_1, pressed_2, pressed_3)
   --   door is open, close it.
   -- * Otherwise, do not send commands to the door.
   ASSIGN
-    door_cmd :=
+    door_cmd :=  -- KOLLA MED TA IMON OM next()
       case
-        direction = stop & (pressed_1 | pressed_2 | pressed_3): open;
-        direction = stop & (!pressed_1 | !pressed_2 | !pressed_3): close;
         direction != stop: nop;
+        pending_here & door_cmd = close: open;
+        ( pending_down | pending_up) & door_cmd = open: close;
+        TRUE: nop;
       esac;
 
   -- Variable "last_dir" records the last movement direction of the cabin.
@@ -165,11 +166,11 @@ MODULE CTRL(floor, door, pressed_1, pressed_2, pressed_3)
     init(direction) := stop;
     next(direction) :=
       case
-        door_cmd = open: stop;
-        door_cmd = close & pressed_1 & floor > 1: down;
-        door_cmd = close & pressed_2 & floor = 1: up;
-        door_cmd = close & pressed_2 & floor = 3: down;
-        door_cmd = close & pressed_3 & floor < 3: up;
+        door_cmd = open: direction;
+        pending_here & direction != stop: stop;
+        pending_down & pending_up: last_dir;
+        pending_up: up;
+        pending_down: down;
         TRUE: direction;
       esac;
 
@@ -217,6 +218,3 @@ MODULE main
   --      and the cabin must be stopped.
 
 ---------------------------------------------------------------------------
-
-LTLSPEC
-
