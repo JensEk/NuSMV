@@ -51,12 +51,10 @@ MODULE Cabin(direction)
       case
         next(direction) = stop : floor;
         next(direction) = up   : case
-				   floor != N: floor + 1;
-           TRUE: floor;
+				   ???
                                  esac;
         next(direction) = down : case
-				   floor != 1: floor - 1;
-           TRUE: floor;
+				   ???
                                  esac;
       esac;
 
@@ -136,12 +134,9 @@ MODULE CTRL(floor, door, pressed_1, pressed_2, pressed_3)
   --   door is open, close it.
   -- * Otherwise, do not send commands to the door.
   ASSIGN
-    door_cmd :=  -- KOLLA MED TA IMON OM next()
+    door_cmd :=
       case
-        direction != stop: nop;
-        pending_here & door_cmd = close: open;
-        ( pending_down | pending_up) & door_cmd = open: close;
-        TRUE: nop;
+	???
       esac;
 
   -- Variable "last_dir" records the last movement direction of the cabin.
@@ -166,12 +161,7 @@ MODULE CTRL(floor, door, pressed_1, pressed_2, pressed_3)
     init(direction) := stop;
     next(direction) :=
       case
-        door_cmd = open: direction;
-        pending_here & direction != stop: stop;
-        pending_down & pending_up: last_dir;
-        pending_up: up;
-        pending_down: down;
-        TRUE: direction;
+	???
       esac;
 
   -- The cabin needs to stop before it can change direction.
@@ -188,14 +178,13 @@ MODULE main
   VAR
     cabin : Cabin(ctrl.direction);
     door  : Door(ctrl.door_cmd);
-
-    -- button_x.pressed might give us the boolean value of the button.
     button_1 : Button(ctrl.reset_1);
     button_2 : Button(ctrl.reset_2);
     button_3 : Button(ctrl.reset_3);
     ctrl : CTRL(cabin.floor, door.status,
                 button_1.pressed, button_2.pressed,
                 button_3.pressed);
+
 
 
 ---------------------------------------------------------------------------
