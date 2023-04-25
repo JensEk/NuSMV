@@ -30,6 +30,7 @@ MODULE Button(reset)
 
   -- REQ: The controller must not reset a button that is not pressed.
 LTLSPEC !(G (!pressed & reset))
+SPEC AG (!pressed -> !reset)
 
 ---------------------------------------------------------------------------
 -- CABIN                                                                 --
@@ -224,7 +225,7 @@ SPEC AG (button_3.reset -> ctrl.direction = stop & door.status = open & cabin.fl
   -- REQ3: A button must be reset as soon as the cabin stops at the
   --      corresponding floor with the door open.
 -- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 1 -> !button_1.pressed)
--- LTLSPEC !(G (ctrl.direction = stop & door.status = open & cabin.floor = 1 -> X button_1.pressed)
+-- LTLSPEC !(G (ctrl.direction = stop & door.status = open & cabin.floor = 1 -> X button_1.pressed))
 -- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 2 -> AF !button_2.pressed)
 -- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 3 -> AF !button_3.pressed)
 
