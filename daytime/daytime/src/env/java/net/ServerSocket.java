@@ -13,6 +13,9 @@ public class ServerSocket {
   }
 
   public Socket accept() throws IOException {
+	if (Verify.getBoolean()) {
+      throw new IOException("Simulated exception when accepting connection.");
+    }
     return new Socket();
   }
 
