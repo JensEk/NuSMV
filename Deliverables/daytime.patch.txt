@@ -1,0 +1,50 @@
+From 05968580b41ea71a8bcc2920e3a1e2a06a20542d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Oskar=20Svanstr=C3=B6m?= <oskarsva@kth.se>
+Date: Thu, 4 May 2023 13:18:08 +0200
+Subject: [PATCH] Bugfix 3
+
+---
+ daytime/daytime/src/DaytimeServer.java             | 8 ++++----
+ daytime/daytime/src/env/java/net/ServerSocket.java | 3 +++
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/daytime/daytime/src/DaytimeServer.java b/daytime/daytime/src/DaytimeServer.java
+index ed9e3d7..e4253c5 100644
+--- a/daytime/daytime/src/DaytimeServer.java
++++ b/daytime/daytime/src/DaytimeServer.java
+@@ -5,8 +5,8 @@
+ 
+ import java.io.IOException;
+ import java.io.OutputStreamWriter;
+-import java.net.ServerSocket;
+-import java.net.Socket;
++import env.java.net.ServerSocket;
++import env.java.net.Socket;
+ import java.util.Date;
+ 
+ public class DaytimeServer {
+@@ -33,8 +33,8 @@ public static void main(String[]args) {
+     }
+     finally {
+       try {
+-        connection.close();
+-	server.close();
++        if (connection != null) connection.close(); // This is the potential bug, since ServerSocket::accept could potentially throw an error and return null
++		server.close();
+       }
+       catch(IOException e) {
+         System.err.println(e);
+diff --git a/daytime/daytime/src/env/java/net/ServerSocket.java b/daytime/daytime/src/env/java/net/ServerSocket.java
+index 9aa3974..4bb0d6d 100644
+--- a/daytime/daytime/src/env/java/net/ServerSocket.java
++++ b/daytime/daytime/src/env/java/net/ServerSocket.java
+@@ -13,6 +13,9 @@ public ServerSocket(int port) throws IOException {
+   }
+ 
+   public Socket accept() throws IOException {
++	if (Verify.getBoolean()) {
++      throw new IOException("Simulated exception when accepting connection.");
++    }
+     return new Socket();
+   }
+ 
