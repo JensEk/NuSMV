@@ -28,8 +28,7 @@ MODULE Button(reset)
         !pressed         : {FALSE,TRUE};
       esac;
 
-  -- REQ: The controller must not reset a button that is not pressed.
-LTLSPEC !(G (!pressed & reset))
+  -- REQ1: The controller must not reset a button that is not pressed.
 SPEC AG (!pressed -> !reset)
 
 ---------------------------------------------------------------------------
@@ -60,11 +59,11 @@ MODULE Cabin(direction)
                                  esac;
       esac;
 
-  -- REQ: The cabin can move up only if the floor is not N.
-LTLSPEC !(G (floor = N & direction = up))
+  -- REQ2: The cabin can move up only if the floor is not N.
+SPEC AG(floor = N -> AX(direction != up))
 
-  -- REQ: The cabin can move down only if the floor is not 1.
-LTLSPEC !(G (floor = 1 & direction = down))
+  -- REQ3: The cabin can move down only if the floor is not 1.
+SPEC AG(floor = 1 -> AX(direction != down))
 
 ---------------------------------------------------------------------------
 -- DOOR                                                                  --
@@ -87,10 +86,10 @@ MODULE Door(door_cmd)
         door_cmd = nop       : status;
       esac;
 
-  -- REQ: The controller can issue an open command only if the door is closed.
+  -- REQ4: The controller can issue an open command only if the door is closed.
 LTLSPEC G (door_cmd = open -> status = closed)
 
-  -- REQ: The controller can issue a close command only if the door is open.
+  -- REQ5: The controller can issue a close command only if the door is open.
 LTLSPEC G (door_cmd = close -> status = open)
 
 ---------------------------------------------------------------------------
@@ -207,36 +206,31 @@ MODULE main
 
   -- The controller must satisfy the following requirements.
 
-  -- REQ1: No button can reach a state where it remains pressed forever.
+  -- REQ6: No button can reach a state where it remains pressed forever.
 SPEC !(EG (button_1.pressed))
 SPEC !(EG (button_2.pressed))
 SPEC !(EG (button_3.pressed))
 
-  -- REQ2: No pressed button can be reset until the cabin stops at the
-  --      corresponding floor and opens the door.
--- LTLSPEC G (ctrl.direction = stop & door.status = open & cabin.floor = 1 & button_1.pressed -> button_1.reset)
--- LTLSPEC G (ctrl.direction = stop & door.status = open & cabin.floor = 2 & button_2.pressed -> button_2.reset)
--- LTLSPEC G (ctrl.direction = stop & door.status = open & cabin.floor = 3 & button_3.pressed -> button_3.reset)
 
+  -- REQ7: No pressed button can be reset until the cabin stops at the
+  --      corresponding floor and opens the door.
 SPEC AG (button_1.reset -> ctrl.direction = stop & door.status = open & cabin.floor = 1 & button_1.pressed)
 SPEC AG (button_2.reset -> ctrl.direction = stop & door.status = open & cabin.floor = 2 & button_2.pressed)
 SPEC AG (button_3.reset -> ctrl.direction = stop & door.status = open & cabin.floor = 3 & button_3.pressed)
 
-  -- REQ3: A button must be reset as soon as the cabin stops at the
-  --      corresponding floor with the door open.
--- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 1 -> !button_1.pressed)
--- LTLSPEC !(G (ctrl.direction = stop & door.status = open & cabin.floor = 1 -> X button_1.pressed))
--- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 2 -> AF !button_2.pressed)
--- SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 3 -> AF !button_3.pressed)
 
+  -- REQ8: A button must be reset as soon as the cabin stops at the
+  --      corresponding floor with the door open.
 SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 1 & button_1.pressed -> button_1.reset)
 SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 2 & button_2.pressed -> button_2.reset)
 SPEC AG (ctrl.direction = stop & door.status = open & cabin.floor = 3 & button_3.pressed -> button_3.reset)
 
-  -- REQ4: The cabin can move only when the door is closed.
+
+  -- REQ9: The cabin can move only when the door is closed.
 SPEC AG (ctrl.direction != stop -> door.status = closed)
 
-  -- REQ5: If no button is pressed, the controller must issue no commands
+
+  -- REQ10: If no button is pressed, the controller must issue no commands
   --      and the cabin must be stopped.
 SPEC AG (!button_1.pressed & !button_2.pressed & !button_3.pressed -> ctrl.direction = stop & ctrl.door_cmd = nop)
 
