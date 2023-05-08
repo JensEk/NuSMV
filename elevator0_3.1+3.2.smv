@@ -208,11 +208,13 @@ MODULE CTRL(floor, door, pressed_1, pressed_2, pressed_3, fire, inner_1, inner_2
     next(direction) :=
       case
         fire & (!inner_1 & !inner_2 & !inner_3): stop;
-        door = open: stop;
-        pending_here & (direction != stop | door = closed): stop;
-        pending_down & pending_up: last_dir;
-        pending_up & next(last_dir) != down: up;
-        pending_down & next(last_dir) != up: down;
+	      door = open: stop;
+        pending_here: stop;
+        pending_up & direction = down: stop;
+        pending_down & direction = up: stop;
+        pending_up & pending_down: last_dir;
+        pending_up: up;
+        pending_down: down;
         TRUE: stop;
       esac;
 
