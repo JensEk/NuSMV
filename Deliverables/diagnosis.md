@@ -1,4 +1,4 @@
-# 2.2.1
+# 2.2.1 : Create trace summary
 
 | Transistion | Server main #0 | Client-1 #1 | Client-2 #2 | Finalizers #3-5 | Worker-1 #6 | Worker-2 #7 |
 |---|---|---|---|---|---|---|
@@ -16,7 +16,7 @@
 |13-18| | | | |register worker| |
 |19-21| | | | |readLine| |
 |22-29| | | | |sendAll| |
-|30| |close port| | | | |
+|30| |close outputstream| | | | |
 |31| | | |[no source]| | |
 |32| | |sends data and recieves data| | | |
 |33-35| | | | |IOException| |
@@ -28,7 +28,7 @@
 |55| | | | |check workers array| |
 
 
-# 2.2.2
+# 2.2.2 : Describe what went wrong
 
 ## Key 1 : Transistion 0-10
 The chat server initiliazes with new socket to listen in on and creates a Worker array to accept maximum "maxServ" connections. Two worker threads are started to server the clients making the connections. There are two clients that makes a connection to the server and server keeps the count with the variable "n" that is incremented for each connection. Server than closes the connections and shuts down.
@@ -40,7 +40,7 @@ The server has created a new thread (Thread 1) which starts its main loop (run()
 Client 1 then recieves 3 of the messages. Thread 2 creates input and output stream object to transmit data and writes its ID and "Hello World!" to the stream then flushes it. Reads data from the inputstream and prints it to the screen.  
 
 ## Key 4 : Transition 33-35
-Worker 1 tries to send data to all clients but fails and catches IOEXception then the server tries to remove worker 1 thread that caused the IOException. The IOException occurs because client 1 has closed the outputstream, and as such the pipe is no longer active.
+Worker 1 tries to send data to all clients but fails and catches IOEXception then the server tries to remove worker 1 thread that caused the IOException. The IOException occurs because client 1 has closed the outputstream, and as such the pipe is no longer active when Worker 1 tries to read from the stream.
 
 ## Key 5 : Transition 36-45
 Worker 2 starts executing and creates a new outputstream object then checks that the stream is active and that the worker array of itself is not set to null.
@@ -50,3 +50,7 @@ Worker 1 is removed from the server and the worker array of its position is set 
 
 ## Key 7: Transistion 48-55
 Worker 1 is going through the sendAll process and currently iterating over the workers array. All the while Worker 2 is initializing and also checking the workers array. This causes a data race where depending on of Worker 2 get to check it's index first, it will set the cell to a new worker which results in that Worker 1 will send information to the client connected. If Worker 1 reaches it first then data will not be sent to the client connected. The data race occurs when Worker 2 tries to set workers[index] to "this", whilst Worker 1 is checking the workers array.
+
+
+# 2.2.3 : Patch the issue
+The issue occurs because of a datarace between the worker threads. Both threads try to access the same array at the same time. As such, we need to block access to the array workers so that only one thread may access it at a time. To do this, we simply create a new Object called "lock" that is a field in the ChatServer class. Then, anywhere where the program tries to access the array workers, we will syncronize this with the new "lock" object. This restricts only one thread from accessing any part of the array workers. Detailed implementation can be seen in the .java file found in this same directory.
