@@ -29,7 +29,6 @@ MODULE Button(reset)
       esac;
 
   -- REQ: The controller must not reset a button that is not pressed.
-LTLSPEC !(G (!pressed & reset))
 SPEC AG (!pressed -> !reset)
 
 
@@ -86,11 +85,11 @@ MODULE Cabin(direction)
                                  esac;
       esac;
 
-  -- REQ: The cabin can move up only if the floor is not N.
-LTLSPEC !(G (floor = N & direction = up))
+  -- REQ2: The cabin can move up only if the floor is not N.
+SPEC AG(floor = N -> AX(direction != up))
 
-  -- REQ: The cabin can move down only if the floor is not 1.
-LTLSPEC !(G (floor = 1 & direction = down))
+  -- REQ3: The cabin can move down only if the floor is not 1.
+SPEC AG(floor = 1 -> AX(direction != down))
 
 ---------------------------------------------------------------------------
 -- DOOR                                                                  --
