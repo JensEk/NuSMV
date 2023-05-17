@@ -1,7 +1,6 @@
 # Defect report of Valgrind trace
 
 __Authors:__ Alexander Söderhäll, Jens Ekenblad, Oskar Svanström
-Oskar Svanström
 
 
 ### Task description
